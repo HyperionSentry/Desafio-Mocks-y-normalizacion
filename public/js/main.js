@@ -1,3 +1,6 @@
+//const denormalizeData = require('./normalizer.js');
+//import { denormalizeData } from "./normalizer.js";
+
 const socket = io.connect();
 
 const addProduct = document.getElementById('addProduct')
@@ -38,13 +41,31 @@ const sendMessage = document.getElementById('sendMessage')
 sendMessage.addEventListener('submit', e => {
     e.preventDefault()
 
-    const mensaje = { autor: inputUsername.value, texto: inputMensaje.value }
+    const mensaje = { 
+        autor: {
+            id: inputEmail.value, 
+            nombre: inputUsername.value,
+            apellido: inputUserLastname.value,
+            edad: inputUserAge.value,
+            alias: inputUserAlias.value,
+            avatar: inputUserAvatar.value
+        },
+        text: inputMensaje.value 
+    }
+
+
     socket.emit('newMessage', mensaje);
     sendMessage.reset()
     inputMensaje.focus()
 })
 
 socket.on('messages', messages => {
+ // console.log('En el front normalizado');
+    console.log(messages);
+//     console.log('denormalized data');
+// 	const denormalizedData = denormalizeData(mensajes)
+//   console.log(denormalizedData);
+
     const html = makeHtmlList(messages)
     document.getElementById('messages').innerHTML = html;
 })
@@ -53,19 +74,18 @@ function makeHtmlList(messages) {
     return messages.map(mensaje => {
         return (`
             <div>
-                <b style="color:blue;">${mensaje.autor}</b>
-                [<span style="color:brown;">${mensaje.fyh}</span>] :
-                <i style="color:green;">${mensaje.texto}</i>
+                <b style="color:blue;">${mensaje.author.id}</b>
+                <i style="color:green;">${mensaje.text}</i>
             </div>
         `)
     }).join(" ");
 }
 
 inputUsername.addEventListener('input', () => {
-    const hayEmail = inputUsername.value.length
+    const hayDatos = inputEmail.value.length && inputUsername.value.length && inputUserLastname.value.length && inputUserAge.value.length && inputUserAlias.value.length && inputUserAvatar.value.length
     const hayTexto = inputMensaje.value.length
-    inputMensaje.disabled = !hayEmail
-    btnEnviar.disabled = !hayEmail || !hayTexto
+    inputMensaje.disabled = !hayDatos
+    btnEnviar.disabled = !hayDatos || !hayTexto
 })
 
 inputMensaje.addEventListener('input', () => {

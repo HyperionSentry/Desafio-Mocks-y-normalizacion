@@ -2,12 +2,13 @@
 const express = require('express')
 const path = require('path')
 const publicPath = path.resolve(__dirname, '../public');
+const initMongoDB = require('../services/database');
 
 const http = require('http');
 const io = require('socket.io');
 
 const products_api = require('../api/productos-test.js')
-//const messages_api = require('../api/messages_api.js')
+const messages_api = require('../api/messages_api.js')
 
 //--------------------------------------------
 // instancio servidor, socket y api
@@ -17,10 +18,11 @@ const app = express()
 const myServer = http.Server(app);
 const myWSServer = io(myServer);
 
-//const productosApi = new products_api(mariaDBOptions, 'Products')
-//const mensajesApi = new messages_api(sqliteOptions, 'Messages')
 
 const productosApi = new products_api()
+const mensajesApi = new messages_api('message_log.json')
+
+initMongoDB();
 
 //--------------------------------------------
 // configuro el socket
@@ -37,15 +39,14 @@ myWSServer.on('connection', async socket => {
 //         myWSServer.sockets.emit('products', productosApi.listarAll());
 //     })
 
-//     // carga inicial de mensajes
-//     socket.emit('messages', await mensajesApi.listarAll());
+    // carga inicial de mensajes
+    socket.emit('messages', await mensajesApi.showAll());
 
-//     // actualizacion de mensajes
-//     socket.on('newMessage', async mensaje => {
-//         mensaje.fyh = new Date().toLocaleString()
-//         await mensajesApi.guardar(mensaje)
-//         myWSServer.sockets.emit('messages', await mensajesApi.listarAll());
-//     })
+    // actualizacion de mensajes
+    socket.on('newMessage', async mensaje => {
+        await mensajesApi.save(mensaje)
+        myWSServer.sockets.emit('messages', await mensajesApi.showAll());
+    })
  });
 
 
